@@ -1,5 +1,7 @@
 # Netlify Serverless Functions for the Foxy.io API
 
+_edit_
+
 This repository allows you to (more) easily create serverless functions to work with the Foxy.io API, deployed using Netlify.
 The goal is to make this as [approachable](#Built to be approachable) as possible, so we try to have reasonable default behaviours, and Netlify is a great choice because of the one-click deployment.
 Once you deploy to Netlify, you can modify your own GitHub files to customize as needed.
