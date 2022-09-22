@@ -33,6 +33,8 @@ async function handler(requestEvent) {
     // Always add shipping to the taxable amount
     total_amount_taxable += taxPayload.total_shipping;
 
+console.log(total_amount_taxable);
+
     // Default tax object for no taxes
     let calculated_taxes = {
         "ok": true,
@@ -52,47 +54,47 @@ async function handler(requestEvent) {
         
         switch (region) {
             case "AB": // Alberta
-                GST = 5;
+                GST = 0.05;
                 break;
             case "BC": // British Columbia
-                GST = 5;
-                PST = 7;
+                GST = 0.05;
+                PST = 0.07;
                 break;
             case "MB": // Manitoba
-                GST = 5;
-                PST = 8;
+                GST = 0.05;
+                PST = 0.08;
                 break;
             case "NB": // New Brunswick
-                HST = 15;
+                HST = 0.15;
                 break;
             case "NL": // Newfoundland and Labrador
-                HST = 15;
+                HST = 0.15;
                 break;
             case "NS": // Nova Scotia
-                HST = 15;
+                HST = 0.15;
                 break;
             case "NT": // Northwest Territories
-                GST = 5;
+                GST = 0.05;
                 break;
             case "NU": // Nunavut
-                GST = 5;
+                GST = 0.05;
                 break;
             case "ON": // Ontario
-                HST = 13;
+                HST = 0.13;
                 break;
             case "PE": // Prince Edward Island
-                HST = 15;
+                HST = 0.15;
                 break;
             case "QC": // Quebec
-                GST = 5;
-                QST = 9.975;
+                GST = 0.05;
+                QST = 0.09975;
                 break;
             case "SK": // Saskatchewan
-                GST = 5;
-                PST = 6;
+                GST = 0.05;
+                PST = 0.06;
                 break;
             case "YT": // Yukon
-                GST = 5;
+                GST = 0.05;
                 break;
         }
 
@@ -100,7 +102,7 @@ async function handler(requestEvent) {
             calculated_taxes.name = "Tax"
 
             if (GST > 0) {
-                let tax_amount = total_amount_taxable * (GST/100);
+                let tax_amount = total_amount_taxable * GST;
                 calculated_taxes.expand_taxes.push({
                     "name": "GST",
                     "rate": GST,
@@ -110,7 +112,7 @@ async function handler(requestEvent) {
                 calculated_taxes.total_rate += GST;
 
                 if (PST > 0) {
-                    let tax_amount = total_amount_taxable * (PST / 100);
+                    let tax_amount = total_amount_taxable * PST;
                     calculated_taxes.expand_taxes.push({
                         "name": "PST",
                         "rate": PST,
@@ -119,7 +121,7 @@ async function handler(requestEvent) {
                     calculated_taxes.total_taxes += tax_amount;
                     calculated_taxes.total_rate += PST;
                 } else if (QST > 0) {
-                    let tax_amount = total_amount_taxable * (QST / 100);
+                    let tax_amount = total_amount_taxable * QST;
                     calculated_taxes.expand_taxes.push({
                         "name": "QST",
                         "rate": QST,
@@ -129,7 +131,7 @@ async function handler(requestEvent) {
                     calculated_taxes.total_rate += QST;
                 }
             } else if (HST > 0) {
-                let tax_amount = total_amount_taxable * (HST / 100);
+                let tax_amount = total_amount_taxable * HST;
                 calculated_taxes.expand_taxes.push({
                     "name": "HST",
                     "rate": HST,
@@ -140,6 +142,8 @@ async function handler(requestEvent) {
             }
         }
     }
+
+    console.log(JSON.stringify(calculated_taxes));
 
     return {
         body: JSON.stringify(calculated_taxes),
