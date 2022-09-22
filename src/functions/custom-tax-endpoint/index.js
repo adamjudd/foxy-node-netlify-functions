@@ -108,7 +108,7 @@ console.log(total_amount_taxable);
                     "rate": GST,
                     "amount": tax_amount
                 });
-                calculated_taxes.total_taxes += tax_amount;
+                calculated_taxes.total_amount += tax_amount;
                 calculated_taxes.total_rate += GST;
 
                 if (PST > 0) {
@@ -118,7 +118,7 @@ console.log(total_amount_taxable);
                         "rate": PST,
                         "amount": tax_amount
                     });
-                    calculated_taxes.total_taxes += tax_amount;
+                    calculated_taxes.total_amount += tax_amount;
                     calculated_taxes.total_rate += PST;
                 } else if (QST > 0) {
                     let tax_amount = total_amount_taxable * QST;
@@ -127,7 +127,7 @@ console.log(total_amount_taxable);
                         "rate": QST,
                         "amount": tax_amount
                     });
-                    calculated_taxes.total_taxes += tax_amount;
+                    calculated_taxes.total_amount += tax_amount;
                     calculated_taxes.total_rate += QST;
                 }
             } else if (HST > 0) {
@@ -137,7 +137,7 @@ console.log(total_amount_taxable);
                     "rate": HST,
                     "amount": tax_amount
                 });
-                calculated_taxes.total_taxes += tax_amount;
+                calculated_taxes.total_amount += tax_amount;
                 calculated_taxes.total_rate += HST;
             }
         }
