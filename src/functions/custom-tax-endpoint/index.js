@@ -9,49 +9,144 @@ const FoxyWebhook = require("../../foxy/FoxyWebhook.js");
  */
 async function handler(requestEvent) {
 
-// Example: Modify logic to suit your use case
-// Assumes that items in the cart will not be mixed with dealer category and other categories
-// US — all customers 0% tax
-// outside US — 12% tax non-dealers, 5% dealers
+    const zero_rated_categories = ['Autopilot', 'COFFEE', 'DIFM_COFFEE', 'FR_COFFEE'];
 
-const taxPayload = JSON.parse(requestEvent.body);
-const country = taxPayload._embedded['fx:shipments'][0]['country'];
-const category = taxPayload._embedded['fx:items'][0]['_embedded']['fx:item_category']['code'];
-const totalToTax = taxPayload.total_item_price + taxPayload.total_shipping + taxPayload.total_discount;
+    const taxPayload = JSON.parse(requestEvent.body);
+    const country = taxPayload._embedded['fx:shipments'][0]['country'];
+    const region = taxPayload._embedded['fx:shipments'][0]['region'];
 
-let tax_rate = 0;
+    let total_amount_taxable = 0;
 
-if (country != "US") {
-  if (category.toLowerCase() == "dealer") {
-    tax_rate = .05;
-  } else {
-    tax_rate = .12;
-  }
-}
+    // Calculate the total amount of products that are taxable
+    for (let i = 0; i < taxPayload._embedded['fx:items'].length; i++) {
+        const item = taxPayload._embedded['fx:items'][i];
+        
+        if (zero_rated_categories.includes(item['_embedded']['fx:item_category']['code']) === false) {
+            // This isn't a zero-rated category, so add it's total cost to the total_amount_taxable amount
+            total_amount_taxable += item.quantity * item.price;
+        }
+    }
+    // Remove any discounts if there are taxable items (total_discounts is a negative number)
+    if (total_amount_taxable > 0) {
+        total_amount_taxable += taxPayload.total_discount;
+    }
+    // Always add shipping to the taxable amount
+    total_amount_taxable += taxPayload.total_shipping;
 
-let tax_amount = tax_rate * totalToTax;
-const taxConfiguration = {
-   "ok":true,
-   "details":"",
-   "name":"custom tax",
-   "expand_taxes":[
-     // you can add up to 3 tax rates here. Be sure to add them together to get the total rate
-     {
-       "name": "Tax",
-       "rate": tax_rate,
-       "amount": tax_amount
-      }
-    ],
-    "total_amount": tax_amount,
-    "total_rate": tax_rate
-  };
+    // Default tax object for no taxes
+    let calculated_taxes = {
+        "ok": true,
+        "details": "",
+        "name": "",
+        "expand_taxes": [
+        ],
+        "total_amount": 0,
+        "total_rate": 0
+    };
 
- return {
-   body: JSON.stringify(taxConfiguration),
-   statusCode: 200
-  };
+    if (country == "CA") {
+        let GST = 0,
+            HST = 0,
+            PST = 0,
+            QST = 0;
+        
+        switch (region) {
+            case "AB": // Alberta
+                GST = 5;
+                break;
+            case "BC": // British Columbia
+                GST = 5;
+                PST = 7;
+                break;
+            case "MB": // Manitoba
+                GST = 5;
+                PST = 8;
+                break;
+            case "NB": // New Brunswick
+                HST = 15;
+                break;
+            case "NL": // Newfoundland and Labrador
+                HST = 15;
+                break;
+            case "NS": // Nova Scotia
+                HST = 15;
+                break;
+            case "NT": // Northwest Territories
+                GST = 5;
+                break;
+            case "NU": // Nunavut
+                GST = 5;
+                break;
+            case "ON": // Ontario
+                HST = 13;
+                break;
+            case "PE": // Prince Edward Island
+                HST = 15;
+                break;
+            case "QC": // Quebec
+                GST = 5;
+                QST = 9.975;
+                break;
+            case "SK": // Saskatchewan
+                GST = 5;
+                PST = 6;
+                break;
+            case "YT": // Yukon
+                GST = 5;
+                break;
+        }
+
+        if (GST + HST > 0) {
+            calculated_taxes.name = "Tax"
+
+            if (GST > 0) {
+                let tax_amount = total_amount_taxable * (GST/100);
+                calculated_taxes.expand_taxes.push({
+                    "name": "GST",
+                    "rate": GST,
+                    "amount": tax_amount
+                });
+                calculated_taxes.total_taxes += tax_amount;
+                calculated_taxes.total_rate += GST;
+
+                if (PST > 0) {
+                    let tax_amount = total_amount_taxable * (PST / 100);
+                    calculated_taxes.expand_taxes.push({
+                        "name": "PST",
+                        "rate": PST,
+                        "amount": tax_amount
+                    });
+                    calculated_taxes.total_taxes += tax_amount;
+                    calculated_taxes.total_rate += PST;
+                } else if (QST > 0) {
+                    let tax_amount = total_amount_taxable * (QST / 100);
+                    calculated_taxes.expand_taxes.push({
+                        "name": "QST",
+                        "rate": QST,
+                        "amount": tax_amount
+                    });
+                    calculated_taxes.total_taxes += tax_amount;
+                    calculated_taxes.total_rate += QST;
+                }
+            } else if (HST > 0) {
+                let tax_amount = total_amount_taxable * (HST / 100);
+                calculated_taxes.expand_taxes.push({
+                    "name": "HST",
+                    "rate": HST,
+                    "amount": tax_amount
+                });
+                calculated_taxes.total_taxes += tax_amount;
+                calculated_taxes.total_rate += HST;
+            }
+        }
+    }
+
+    return {
+        body: JSON.stringify(calculated_taxes),
+        statusCode: 200
+    };
 }
 
 module.exports = {
-  handler
+    handler
 }
