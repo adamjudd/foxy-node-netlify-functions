@@ -15,7 +15,7 @@ async function handler(requestEvent) {
     const country = taxPayload._embedded['fx:shipments'][0]['country'];
     const region = taxPayload._embedded['fx:shipments'][0]['region'];
 
-    console.log(JSON.stringify(taxPayload));
+    console.log(requestEvent);
 
     let total_amount_taxable = 0;
 
