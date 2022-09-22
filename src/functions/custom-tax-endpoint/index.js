@@ -155,10 +155,10 @@ console.log(total_amount_taxable);
 }
 
 function format(num, min_decimals = 0, max_decimals = 2) {
-    return num.toLocaleString('en-US', {
+    return parseFloat(num.toLocaleString('en-US', {
         minimumFractionDigits: min_decimals,
         maximumFractionDigits: max_decimals,
-    });
+    }));
 }
 
 module.exports = {
