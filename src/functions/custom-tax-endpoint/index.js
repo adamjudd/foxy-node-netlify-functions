@@ -102,7 +102,7 @@ console.log(total_amount_taxable);
             calculated_taxes.name = "Tax"
 
             if (GST > 0) {
-                let tax_amount = total_amount_taxable * GST;
+                let tax_amount = format(total_amount_taxable * GST);
                 calculated_taxes.expand_taxes.push({
                     "name": "GST",
                     "rate": GST,
@@ -112,7 +112,7 @@ console.log(total_amount_taxable);
                 calculated_taxes.total_rate += GST;
 
                 if (PST > 0) {
-                    let tax_amount = total_amount_taxable * PST;
+                    let tax_amount = format(total_amount_taxable * PST);
                     calculated_taxes.expand_taxes.push({
                         "name": "PST",
                         "rate": PST,
@@ -121,7 +121,7 @@ console.log(total_amount_taxable);
                     calculated_taxes.total_amount += tax_amount;
                     calculated_taxes.total_rate += PST;
                 } else if (QST > 0) {
-                    let tax_amount = total_amount_taxable * QST;
+                    let tax_amount = format(total_amount_taxable * QST);
                     calculated_taxes.expand_taxes.push({
                         "name": "QST",
                         "rate": QST,
@@ -131,7 +131,7 @@ console.log(total_amount_taxable);
                     calculated_taxes.total_rate += QST;
                 }
             } else if (HST > 0) {
-                let tax_amount = total_amount_taxable * HST;
+                let tax_amount = format(total_amount_taxable * HST);
                 calculated_taxes.expand_taxes.push({
                     "name": "HST",
                     "rate": HST,
@@ -140,6 +140,9 @@ console.log(total_amount_taxable);
                 calculated_taxes.total_amount += tax_amount;
                 calculated_taxes.total_rate += HST;
             }
+
+            calculated_taxes.total_amount = format(calculated_taxes.total_amount);
+            calculated_taxes.total_rate = format(calculated_taxes.total_rate, 0, 5);
         }
     }
 
@@ -149,6 +152,13 @@ console.log(total_amount_taxable);
         body: JSON.stringify(calculated_taxes),
         statusCode: 200
     };
+}
+
+function format(num, min_decimals = 0, max_decimals = 2) {
+    return num.toLocaleString('en-US', {
+        minimumFractionDigits: min_decimals,
+        maximumFractionDigits: max_decimals,
+    });
 }
 
 module.exports = {
