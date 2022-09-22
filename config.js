@@ -36,7 +36,8 @@ const config = {
     },
     skipValidation: {
       inventory: env('FOXY_SKIP_INVENTORY_CODES') || env('FX_SKIP_INVENTORY_CODES'),
-      price: env('FOXY_SKIP_PRICE_CODES') || env('FX_SKIP_PRICE_CODES')
+      price: env('FOXY_SKIP_PRICE_CODES') || env('FX_SKIP_PRICE_CODES'),
+      updateinfo: env('FOXY_SKIP_UPDATEINFO_NAME')
     },
   },
   default: {
@@ -56,6 +57,9 @@ const config = {
     apiUrl: env('FOXY_IDEV_API_URL') || env('IDEV_API_URL'),
     secretKey: env('FOXY_IDEV_SECRET_KEY') || env('IDEV_SECRET_KEY'),
   },
+  vatlayer: {
+    accessKey: env('VATLAYER_ACCESS_KEY'),
+  }
 }
 
 
