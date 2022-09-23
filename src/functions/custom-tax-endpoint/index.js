@@ -16,12 +16,22 @@ async function handler(requestEvent) {
     const country = taxPayload._embedded['fx:shipments'][0]['country'];
     const region = taxPayload._embedded['fx:shipments'][0]['region'];
 
-    console.log(requestEvent);
-
     // Ignore anything other than the calculate event
     if (requestEvent.headers['foxy-webhook-event'] != "tax/calculate") return;
 
     let total_amount_taxable = 0;
+
+    let summary = {
+        "transaction_id": taxPayload['_links'].self.href.substring(taxPayload['_links'].self.href.lastIndexOf("/") + 1),
+        "country": country,
+        "region": region,
+        "taxable_products": [],
+        "non_taxable_products": [],
+        "total_subtotal_taxable": 0,
+        "total_discounts": taxPayload.total_discount,
+        "total_shipping": taxPayload.total_shipping,
+        "total_amount_taxable": 0
+    };
 
     // Calculate the total amount of products that are taxable
     for (let i = 0; i < taxPayload._embedded['fx:items'].length; i++) {
@@ -30,16 +40,23 @@ async function handler(requestEvent) {
         if (zero_rated_categories.includes(item['_embedded']['fx:item_category']['code']) === false) {
             // This isn't a zero-rated category, so add it's total cost to the total_amount_taxable amount
             total_amount_taxable += item.quantity * item.price;
+            summary.taxable_produxts.push(item.code);
+        } else {
+            summary.non_taxable_produxts.push(item.code);
         }
     }
+
+    summary.total_subtotal_taxable = total_amount_taxable;
+
     // Remove any discounts if there are taxable items (total_discounts is a negative number)
     if (total_amount_taxable > 0) {
         total_amount_taxable += taxPayload.total_discount;
     }
+
     // Always add shipping to the taxable amount
     total_amount_taxable += taxPayload.total_shipping;
 
-console.log(total_amount_taxable);
+    summary.total_amount_taxable = total_amount_taxable;
 
     // Default tax object for no taxes
     let calculated_taxes = {
@@ -156,6 +173,7 @@ console.log(total_amount_taxable);
         }
     }
 
+    console.log(JSON.stringify(summary));
     console.log(JSON.stringify(calculated_taxes));
 
     return {
