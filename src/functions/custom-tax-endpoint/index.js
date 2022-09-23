@@ -40,9 +40,9 @@ async function handler(requestEvent) {
         if (zero_rated_categories.includes(item['_embedded']['fx:item_category']['code']) === false) {
             // This isn't a zero-rated category, so add it's total cost to the total_amount_taxable amount
             total_amount_taxable += item.quantity * item.price;
-            summary.taxable_produxts.push(item.code);
+            summary.taxable_products.push(item.code);
         } else {
-            summary.non_taxable_produxts.push(item.code);
+            summary.non_taxable_products.push(item.code);
         }
     }
 
