@@ -9,6 +9,7 @@ const FoxyWebhook = require("../../foxy/FoxyWebhook.js");
  */
 async function handler(requestEvent) {
 
+    // Category codes that are not taxable
     const zero_rated_categories = ['Autopilot', 'COFFEE', 'DIFM_COFFEE', 'FR_COFFEE'];
 
     const taxPayload = JSON.parse(requestEvent.body);
@@ -16,6 +17,9 @@ async function handler(requestEvent) {
     const region = taxPayload._embedded['fx:shipments'][0]['region'];
 
     console.log(requestEvent);
+
+    // Ignore anything other than the calculate event
+    if (requestEvent.headers['foxy-webhook-event'] != "tax/calculate") return;
 
     let total_amount_taxable = 0;
 
@@ -104,6 +108,7 @@ console.log(total_amount_taxable);
             calculated_taxes.name = "Tax"
 
             if (GST > 0) {
+                calculated_taxes.name = "GST";
                 let tax_amount = format(total_amount_taxable * GST);
                 calculated_taxes.expand_taxes.push({
                     "name": "GST",
@@ -114,6 +119,7 @@ console.log(total_amount_taxable);
                 calculated_taxes.total_rate += GST;
 
                 if (PST > 0) {
+                    calculated_taxes.name += " & PST";
                     let tax_amount = format(total_amount_taxable * PST);
                     calculated_taxes.expand_taxes.push({
                         "name": "PST",
@@ -123,6 +129,7 @@ console.log(total_amount_taxable);
                     calculated_taxes.total_amount += tax_amount;
                     calculated_taxes.total_rate += PST;
                 } else if (QST > 0) {
+                    calculated_taxes.name += " & QST";
                     let tax_amount = format(total_amount_taxable * QST);
                     calculated_taxes.expand_taxes.push({
                         "name": "QST",
@@ -133,6 +140,7 @@ console.log(total_amount_taxable);
                     calculated_taxes.total_rate += QST;
                 }
             } else if (HST > 0) {
+                calculated_taxes.name = "HST";
                 let tax_amount = format(total_amount_taxable * HST);
                 calculated_taxes.expand_taxes.push({
                     "name": "HST",
